@@ -1,0 +1,69 @@
+# Gemini CLI 日誌 - 2026-02-04
+
+## 對話摘要
+
+- **用戶:** 要求修改 image_rag.md，在 LLM 提示前增加 OCR 步驟。
+- **Gemini:**
+    - 在 Docs 目錄中找到 image_rag.md。
+    - 在「預處理 (Preprocess)」區段增加了 OCR 步驟。
+    - 在「檢索 (Retrieve)」區段增加了關於如何使用 OCR 結果的描述。
+- **用戶:** 說明不需要「區域提案 (Region of Interest)」。
+- **Gemini:** 從文件中移為了「區域提案」步驟。
+- **用戶:** 詢問「影像增強/校正」和 OCR 是否應為平行路徑。
+- **Gemini:** 同意並重組了「預處理」區段，以顯示影像處理和文字提取兩條獨立路徑。
+- **用戶:** 要求一個 Python 腳本來執行圖片 OCR，並指定使用無外部依賴（如 Tesseract）的函式庫。
+- **Gemini:**
+    - 最初提供了使用 pytesseract 的腳本。
+    - 在用戶澄清後，改寫為使用 PaddleOCR。
+    - 建立了 ocr_image.py 檔案。
+- **用戶:** 要求在 D:\vibe_coding_image_rag\1.jpg 上執行該腳本。
+- **Gemini:**
+    - 嘗試使用 python 和 py 命令執行腳本。
+    - 兩個命令都失敗了，表示 Python 未設定在系統的 PATH 中。
+    - 詢問用戶其 Python 可執行檔的完整路徑。
+- **用戶:** 要求儲存對話日誌。
+- **Gemini:** 準備儲存此日誌。
+- **用戶:** 詢問如何針對 File 資料夾中的規範 (IC02, IP14) 與表單 (201, 202) 進行 RAG 切片 (Chunking)。
+- **Gemini:**
+    - 提出針對不同文件類型的切片策略：規範/程序採章節切片 (Recursive splitting)，表單採結構化描述 (Flattened Key-Value)。
+    - 強調「情境注入 (Contextual Injection)」的重要性，將表單與對應的程序書步驟進行關聯。
+- **用戶:** 要求查看文件的關聯性並開始切片。
+- **Gemini:**
+    - 建立 `script/debug_read_docx.py` 透過 `zipfile` 與 `xml` 解析 Word 內容，確認文件間的交叉引用（IP14 引用了 IC02, IC0201, IC0202）。
+    - 建立 `script/chunk_documents.py` 自動化切片腳本。
+    - 該腳本實現了章節切割與關聯性注入，共生成 96 個結構化切片並儲存至 `File/chunks.json`。
+- **用戶:** 確認是否能透過圖片與文字描述給予操作指示。
+- **Gemini:** 確認可行，並解釋了「影像識別 -> 知識檢索 -> 產出指示」的完整 RAG 運作邏輯。
+
+# Gemini CLI 日誌 - 2026-02-09
+
+## 對話摘要
+- **用戶:** 要求將 File 資料夾中的 md 檔進行分段 (Chunking) 且需考慮文件間的關聯性。
+- **Gemini:**
+    - 編寫 `script/chunk_md_files.py`。
+    - 實現章節標題分段邏輯。
+    - 建立自動關聯機制：偵測內文中的表單編號（如 IC0201）並在 JSON 中記錄 `associations` 欄位。
+    - 確保規範（IC02）、程序（IP14）與表單（IC0201, IC0202）之間有正確的語義連結。
+- **用戶:** 要求整理進度至 `Docs/architecture.md`。
+- **Gemini:** 建立了架構文件，詳述資料處理 Pipeline 與文件關聯地圖。
+
+# Gemini CLI 日誌 - 2026-02-10
+
+## 對話摘要
+- **用戶:** 嘗試使用 MinerU 處理檔案，但不要變動 Docling 產生的檔案。
+- **Gemini:**
+    - 安裝並測試了 `mineru` (magic-pdf)。
+    - 發現 MinerU 目前版本對 `.docx` 支援有限（出現 Unknown file suffix 錯誤），且需要複雜的模型配置。
+- **用戶:** 要求使用 Docling 處理 YOLO 論文 PDF，並將腳本存於 `script`。
+- **Gemini:** 建立 `script/convert_yolo_with_docling.py` 完成初步轉換。
+- **用戶:** 要求進階 PDF 預處理：Markdown 化、圖片提取至 `assets/`（命名含頁碼）、圖文關聯。
+- **Gemini:**
+    - 建立 `script/preprocess_pdf_with_images.py`。
+    - 解決了 Windows 環境下 Torch 編譯器缺失 (`cl.exe`) 的問題。
+    - 成功提取圖片並在 Markdown 中保留位置標記。
+- **用戶:** 要求整合 VLM (Ollama) 描述圖片與表格，並寫回 Markdown。
+- **Gemini:**
+    - 修改 `script/2.py`。
+    - 整合本地 Ollama 模型 `granite3.2-vision:latest` 生成中文描述。
+    - **最終優化**: 根據用戶更正，僅描述圖片，表格則維持純 Markdown 格式且不輸出圖片。
+    - 實現了精準的 Markdown 內容替換與注入。
